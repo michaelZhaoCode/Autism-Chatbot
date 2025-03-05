@@ -27,14 +27,14 @@ def retrieve_all_embeddings(
         is_insert: bool = True
 ) -> tuple[list[str], list[list[float]]]:
     """
-    Retrieve all embeddings, optionally including new files. If new files are added, re-compute the cluster.
+    Retrieve all embeddings, optionally including new files. If new files are added or deleted, re-compute the cluster.
 
     Args:
         botservice (BotService): BotService instance for generating embeddings.
         pdf_storage (PDFStorageInterface): The PDF storage interface instance.
         cluster_storage (ClusterStorageInterface): The cluster storage interface instance.
         new_files (list[str], optional): List of new file names to include in the embeddings. Defaults to None.
-        is_insert (bool, optional): Flag to determine whether to insert new embeddings. Defaults to True.
+        is_insert (bool, optional): Flag to determine whether to insert or delete new embeddings. Defaults to True.
 
     Returns:
         tuple[list[str], list[list[float]]]: A tuple containing a list of file names and their corresponding embeddings.
@@ -56,14 +56,16 @@ def retrieve_all_embeddings(
         names.extend(new_files)
         embeddings.extend(new_embeddings)
     else:
-        logger.info("retrieve_all_embeddings: New embeddings not inserted (is_insert=False)")
+        logger.info("retrieve_all_embeddings: Deleting embeddings (is_insert=False)")
         files_set = set(new_files)
         new_names = []
         new_embeddings = []
-        for name in names:
+        for i in range(len(names)):
+            name = names[i]
             if name not in files_set:
                 new_names.append(name)
-                new_embeddings.append(calc_embeddings([name], botservice, pdf_storage)[0])
+                new_embeddings.append(embeddings[i])
+        names, embeddings = new_names, new_embeddings
     logger.info("retrieve_all_embeddings: Returning names and embeddings")
     return names, embeddings
 
